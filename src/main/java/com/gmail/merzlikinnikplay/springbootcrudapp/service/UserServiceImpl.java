@@ -20,34 +20,68 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional
     public void addUser(User user) {
+        if (user.getName() == null || user.getName().isEmpty()) {
+            throw new RuntimeException("Field name must be filled");
+        }
+        if (user.getSurname() == null || user.getSurname().isEmpty()) {
+            throw new RuntimeException("Field surname must be filled");
+        }
+        if (user.getAge() < 0 || user.getAge() > 120) {
+            throw new RuntimeException("Field age must be a correcting value");
+        }
         repoSpringData.save(user);
     }
 
     @Override
-    @Transactional
     public void addUser(String name, String surname, Integer age) {
-        repoSpringData.save(new User(name, surname, age));
+        User user = new User(name, surname, age);
+        if (checkFields(user)) {
+            repoSpringData.save(new User(name, surname, age));
+        } else {
+            throw new IllegalArgumentException("Incorrect input values");
+        }
     }
 
     @Override
-    @Transactional
     public void editUser(User user) {
-        repoSpringData.findById(user.getId()).orElseThrow(()-> {
-            throw new RuntimeException("This user is not exist");
+        User extractedUser = repoSpringData.findById(user.getId()).orElseThrow(() -> {
+            throw new IllegalArgumentException("This user is not exist");
         });
-        repoSpringData.save(user);
+        if (checkFields(user)) {
+            fillingFields(user, extractedUser);
+        }
+        repoSpringData.save(extractedUser);
+    }
+
+    private boolean checkFields(User user) {
+        if (user.getName() == null || user.getName().isEmpty()) {
+            return false;
+        }
+        if (user.getSurname() == null || user.getSurname().isEmpty()) {
+            return false;
+        }
+        if (user.getAge() < 0 && user.getAge() > 120) {
+            return false;
+        }
+        return true;
+    }
+
+    private void fillingFields(User source, User dest) {
+        dest.setName(source.getName());
+        dest.setSurname(source.getSurname());
+        dest.setAge(source.getAge());
     }
 
     @Override
-    @Transactional
     public void deleteUser(long id) {
+        if (id < 0) {
+            throw new IllegalArgumentException("Incorrect value of Id");
+        }
         repoSpringData.deleteById(id);
     }
 
     @Override
-    @Transactional
     public List<User> getAllUsers() {
         return new ArrayList<>(repoSpringData.findAll());
 
@@ -55,8 +89,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User getUser(long id) {
-        return repoSpringData.findById(id).orElseThrow(()-> {
-            throw new RuntimeException("This user is not exist");
+        if (id < 0) {
+            throw new IllegalArgumentException("Incorrect value of Id");
+        }
+        return repoSpringData.findById(id).orElseThrow(() -> {
+            throw new IllegalArgumentException("This user is not exist");
         });
     }
 }
