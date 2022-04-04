@@ -21,16 +21,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void addUser(User user) {
-        if (user.getName() == null || user.getName().isEmpty()) {
-            throw new RuntimeException("Field name must be filled");
+        if (checkFields(user)) {
+            repoSpringData.save(user);
+        } else {
+            throw new IllegalArgumentException("Incorrect input values");
         }
-        if (user.getSurname() == null || user.getSurname().isEmpty()) {
-            throw new RuntimeException("Field surname must be filled");
-        }
-        if (user.getAge() < 0 || user.getAge() > 120) {
-            throw new RuntimeException("Field age must be a correcting value");
-        }
-        repoSpringData.save(user);
     }
 
     @Override
@@ -50,8 +45,8 @@ public class UserServiceImpl implements UserService {
         });
         if (checkFields(user)) {
             fillingFields(user, extractedUser);
+            repoSpringData.save(extractedUser);
         }
-        repoSpringData.save(extractedUser);
     }
 
     private boolean checkFields(User user) {
